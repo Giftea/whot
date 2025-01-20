@@ -11,6 +11,23 @@ import secrets
 
 JOIN = {}
 
+def serialize_game_state(game_state: dict, player_id: str):
+    state = game_state.copy()
+
+    state['pile_top'] = str(state['pile_top'])
+
+    current_player = player_id
+    keys: list[str] = state.keys()
+
+    for key in keys:
+        if key.startswith("player_"):
+            if key == current_player:
+                state[key] = [str(card) for card in state[key]]
+            else:
+                state[key] = len(state[key])
+
+    return state
+
 class GameConnection:
     """
     This class stores the created instance of the game
@@ -32,21 +49,53 @@ class GameConnection:
             return False
 
 async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConnections: GameConnection):
+    
+    while gameConnections.num_of_connections < 2:
+        await asyncio.sleep(1)
 
+    for i, socket in enumerate(gameConnections.connections, start=1):
+        event = {
+            "type": "play",
+            "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+        }
+
+        await socket.send(json.dumps(event))
+    
     async for message in websocket:
-        event = json.loads(message)
-        assert event["type"] == "play"
-
-        card_index = event["card"]
-
         
-        game.play(card_index)
+        event = json.loads(message)
+        
+        if event["type"] == "play":
+            card_index = int(event["card"])
 
-        websockets.broadcast(gameConnections.connections, json.dumps(game.current_state))
+            result = game.play(card_index)
+            print(result)
+            
+            for i, socket in enumerate(gameConnections.connections, start=1):
+                event = {
+                    "type": "play",
+                    "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                }
+
+                await socket.send(json.dumps(event))
+        
+        elif event["type"] == "market":
+
+            game.market()
+
+            for i, socket in enumerate(gameConnections.connections, start=1):
+                event = {
+                    "type": "play",
+                    "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                }
+
+                await socket.send(json.dumps(event))
+
 
 async def join(websocket: ClientConnection, join_key):
     try:
         gameConnection: GameConnection = JOIN[join_key]
+        print("Joined")
     except KeyError:
         print("Game doesn't exist")
         return
@@ -64,7 +113,6 @@ async def start(websocket: ClientConnection):
     JOIN[join_key] = gameConnection
 
     try:
-
         event = {
             "type": "init",
             "join": join_key
@@ -80,7 +128,6 @@ async def handler(websocket: ClientConnection):
     message = await websocket.recv()
     event = json.loads(message)
     assert event["type"] == "init"
-
     if "join" in event:
         await join(websocket, event["join"])
     else:

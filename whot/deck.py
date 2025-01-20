@@ -44,6 +44,9 @@ class Card:
         """
         return self.suit == other.suit or self.face == other.face
 
+    def __str__(self):
+        return f"{self.face} {self.suit.name}"
+
     def __repr__(self):
         return f"{self.face} {self.suit.name}"
 
