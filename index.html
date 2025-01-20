@@ -1,22 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whot Game</title>
 </head>
+
 <body>
     <h1>Welcome to the Whot Game</h1>
-    <script>
-        const ws = new WebSocket('ws://localhost:8765');
-        ws.onopen = () => {
-            console.log('Connected to the server');
-            ws.send('Hello Server');
-        };
-        ws.onmessage = (message) => {
-            console.log('Received:', message.data);
-        };
-    </script>
-</body>
-</html>
+    
+    <p id="current_player">Current Player: </p>
+    <p id="pile_top">Pile top: </p>
+    <p id="player_one">Player One: </p>
+    <p id="player_two">Player Two: </p>
 
+
+    <div>
+        <input id="card" type="text" placeholder="Input card index">
+        <button id="play">Play</button>
+        <button id="market">Market</button>
+    </div>
+
+    <div class="actions">
+        <a class="action new" href="/">New</a>
+        <a class="action join" href="">Join</a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
