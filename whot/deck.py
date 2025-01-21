@@ -22,7 +22,7 @@ class Suit(Enum):
     SQUARE = 1
     STAR = 2
     CROSS = 3
-    ANGLE = 4
+    TRIANGLE = 4
     WHOT = 5
 
     def __str__(self):
@@ -74,7 +74,7 @@ class Deck:
 
     def _create_deck(self):
         # Create angle and circle cards
-        angles = [Card(Suit.ANGLE, angle) for angle in CIRCLES_AND_TRIANGLES]
+        angles = [Card(Suit.TRIANGLE, angle) for angle in CIRCLES_AND_TRIANGLES]
         circles = [Card(Suit.CIRCLE, circle) for circle in CIRCLES_AND_TRIANGLES]
 
         # Create cross and square cards
