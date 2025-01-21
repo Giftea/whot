@@ -56,6 +56,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
     for i, socket in enumerate(gameConnections.connections, start=1):
         event = {
             "type": "play",
+            "player_id": i,
             "game_state": serialize_game_state(game.game_state(), f"player_{i}")
         }
 
@@ -74,6 +75,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
             for i, socket in enumerate(gameConnections.connections, start=1):
                 event = {
                     "type": "play",
+                    "player_id": i,
                     "game_state": serialize_game_state(game.game_state(), f"player_{i}")
                 }
 
@@ -86,6 +88,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
             for i, socket in enumerate(gameConnections.connections, start=1):
                 event = {
                     "type": "play",
+                    "player_id": i,
                     "game_state": serialize_game_state(game.game_state(), f"player_{i}")
                 }
 
