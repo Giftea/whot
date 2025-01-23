@@ -113,11 +113,38 @@ function receiveMoves(websocket) {
                 addOponnentCardImages(event.game_state[opponent])
                 addPlayerCardImages(event.game_state[`player_${event.player_id}`], websocket)
                 break;
+            
+            case "request":
+                current_player.textContent = `Current Player: ${event.game_state["current_player"]}`
+
+                const opponent2 = Object.keys(event.game_state).filter(key => key.startsWith('player_')).filter(key => key !== `player_${event.player_id}`)
+
+                let div = document.getElementById("i_need");
+
+                addMiddleCardImage(event.game_state["pile_top"])
+                addOponnentCardImages(event.game_state[opponent2])
+                addPlayerCardImages(event.game_state[`player_${event.player_id}`], websocket)
+
+                div.style.visibility = "visible";
+
+                break;
+            
+            case "request_card":
+                current_player.textContent = `Current Player: ${event.game_state["current_player"]}`
+                let div2 = document.getElementById("i_need");
+                div2.style.visibility = "hidden";
+                console.log(event.message)
+                break;
+
 
             case "win":
-                showMessage(`Player ${event.player} wins!`);
+                showMessage(`Player ${event.winner} wins!`);
                 // No further messages are expected; close the WebSocket connection.
                 websocket.close(1000);
+                break;
+            
+            case "failed":
+                console.log(`${event.current_player} failed`)
                 break;
 
             case "error":
@@ -170,14 +197,19 @@ function sendMoves(websocket, card, playBtn) {
 window.addEventListener("DOMContentLoaded", () => {
     // Open the WebSocket connection and register event handlers.
     const card = document.getElementById("card");
-    const playBtn = document.getElementById("play");
+    // const playBtn = document.getElementById("play");
     const market = document.getElementById("market");
+    const requestBtn = document.getElementById("requestBtn");
+    const requestCard = document.getElementById("request");
+
+    console.log(requestCard)
     
     const websocket = new WebSocket("ws://localhost:8765/");
 
     initGame(websocket);
     receiveMoves(websocket);
-    sendMoves(websocket, card, playBtn);
+    // sendMoves(websocket, card, playBtn);
+
 
     market.onclick = () => {
         const event = {
@@ -185,5 +217,16 @@ window.addEventListener("DOMContentLoaded", () => {
         };
         console.log("Market!!")
         websocket.send(JSON.stringify(event));        
+    }
+
+    requestBtn.onclick = () => {
+        if (requestCard.value ) {
+            const event = {
+                type: "request",
+                suit: requestCard.value
+            };
+            console.log("Request!!")
+            websocket.send(JSON.stringify(event));
+        }
     }
 });
