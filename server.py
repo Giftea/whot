@@ -37,13 +37,13 @@ class GameConnection:
 
     def __init__(self, game: Whot):
         self.game = game
-        self.connections: list[ClientConnection] = []
+        self.connections: dict[str, ClientConnection] = {}
         self.num_of_connections = 0
     
     def add_connection(self, connection: ClientConnection):
         if self.game.num_of_players != self.num_of_connections:
             self.num_of_connections += 1
-            self.connections.append(connection)
+            self.connections[f"player_{self.num_of_connections}"] = connection
             return f"player_{self.num_of_connections}"
         else:
             return False
@@ -60,7 +60,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
             "game_state": serialize_game_state(game.game_state(), f"player_{i}")
         }
 
-        await socket.send(json.dumps(event))
+        await gameConnections.connections[socket].send(json.dumps(event))
     
     async for message in websocket:
         
@@ -68,18 +68,54 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
         
         if event["type"] == "play":
             card_index = int(event["card"])
-
+            print("Card Index:", card_index)
             result = game.play(card_index)
-            print(result)
             
-            for i, socket in enumerate(gameConnections.connections, start=1):
-                event = {
-                    "type": "play",
-                    "player_id": i,
-                    "game_state": serialize_game_state(game.game_state(), f"player_{i}")
-                }
+            if result["status"] == "Played":
 
-                await socket.send(json.dumps(event))
+                for i, socket in enumerate(gameConnections.connections, start=1):
+                    event = {
+                        "type": "play",
+                        "player_id": i,
+                        "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                    }
+
+                    await gameConnections.connections[socket].send(json.dumps(event))
+            
+            elif result["status"] == "Failed":
+                 
+                 for i, socket in enumerate(gameConnections.connections, start=1):
+                    event = {
+                        "type": "failed",
+                        "current_player": game.game_state()["current_player"]
+                   }
+
+                    await gameConnections.connections[socket].send(json.dumps(event))
+
+            elif result['status'] == "Request":
+
+                # event = {
+                #     "type": "request",
+                #     "current_player": game.game_state()["current_player"],
+                # }
+
+                # await gameConnections.connections[game.game_state()["current_player"]].send(json.dumps(event)) 
+
+                for i, socket in enumerate(gameConnections.connections, start=1):
+                    event = {
+                        "type": "request",
+                        "player_id": i,
+                        "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                    }
+
+                    await gameConnections.connections[socket].send(json.dumps(event))                            
+
+            elif result['status'] == "GameOver":
+                event = {
+                    "type": "win",
+                    "winner": result['winner'],
+                }
+                websockets.broadcast(gameConnections.connections.values(), json.dumps(event))
         
         elif event["type"] == "market":
 
@@ -92,7 +128,24 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                     "game_state": serialize_game_state(game.game_state(), f"player_{i}")
                 }
 
-                await socket.send(json.dumps(event))
+                await gameConnections.connections[socket].send(json.dumps(event))
+
+        elif event["type"] == "request":
+            suit = int(event["suit"])
+
+            requester = game.game_state()['current_player']
+
+            card = str(game.request(suit)['requested_suit'])
+
+            for i, socket in enumerate(gameConnections.connections, start=1):
+                event = {
+                    "type": "request_card",
+                    "message": f"{requester} requested for {card}",
+                    "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                }
+
+                await gameConnections.connections[socket].send(json.dumps(event))
+
 
 
 async def join(websocket: ClientConnection, join_key):
