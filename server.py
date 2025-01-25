@@ -49,7 +49,13 @@ class GameConnection:
             return False
 
 async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConnections: GameConnection):
-    
+    event = {
+        "type": "player_id",
+        "player_id": player_id,
+    }
+
+    await websocket.send(json.dumps(event)) 
+
     while gameConnections.num_of_connections < 2:
         await asyncio.sleep(1)
 
@@ -119,16 +125,18 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
         
         elif event["type"] == "market":
 
-            game.market()
+            if event["player_id"] == game.game_state()["current_player"]:
 
-            for i, socket in enumerate(gameConnections.connections, start=1):
-                event = {
-                    "type": "play",
-                    "player_id": i,
-                    "game_state": serialize_game_state(game.game_state(), f"player_{i}")
-                }
+                game.market()
 
-                await gameConnections.connections[socket].send(json.dumps(event))
+                for i, socket in enumerate(gameConnections.connections, start=1):
+                    event = {
+                        "type": "play",
+                        "player_id": i,
+                        "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                    }
+
+                    await gameConnections.connections[socket].send(json.dumps(event))
 
         elif event["type"] == "request":
             suit = int(event["suit"])
@@ -145,8 +153,6 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                 }
 
                 await gameConnections.connections[socket].send(json.dumps(event))
-
-
 
 async def join(websocket: ClientConnection, join_key):
     try:
