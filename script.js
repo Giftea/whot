@@ -87,11 +87,8 @@ function addPlayerCardImages(cards, websocket) {
     }
 }
 
-function receiveMoves(websocket) {
+function receiveMoves(websocket, player_id) {
     const current_player = document.getElementById("current_player");
-    const pile_top = document.getElementById("pile_top");
-    const player_one = document.getElementById("player_one");
-    const player_two = document.getElementById("player_two");
 
     websocket.addEventListener("message", ({ data }) => {
         console.log(data)
@@ -131,8 +128,8 @@ function receiveMoves(websocket) {
             
             case "request_card":
                 current_player.textContent = `Current Player: ${event.game_state["current_player"]}`
-                let div2 = document.getElementById("i_need");
-                div2.style.visibility = "hidden";
+                let div2 = document.getElementById("i_need")
+                div2.style.visibility = "hidden"
                 console.log(event.message)
                 break;
 
@@ -141,6 +138,10 @@ function receiveMoves(websocket) {
                 showMessage(`Player ${event.winner} wins!`);
                 // No further messages are expected; close the WebSocket connection.
                 websocket.close(1000);
+                break;
+            
+            case "player_id":
+                player_id.textContent = `Player_id: ${event.player_id}`
                 break;
             
             case "failed":
@@ -201,19 +202,22 @@ window.addEventListener("DOMContentLoaded", () => {
     const market = document.getElementById("market");
     const requestBtn = document.getElementById("requestBtn");
     const requestCard = document.getElementById("request");
+    const player_id = document.getElementById("player_id");
 
-    console.log(requestCard)
+    console.log(player_id);
     
     const websocket = new WebSocket("ws://localhost:8765/");
 
     initGame(websocket);
-    receiveMoves(websocket);
+    receiveMoves(websocket, player_id);
     // sendMoves(websocket, card, playBtn);
 
 
     market.onclick = () => {
+        const player = player_id.textContent.split(" ")
         const event = {
             type: "market",
+            player_id: player[1]
         };
         console.log("Market!!")
         websocket.send(JSON.stringify(event));        
