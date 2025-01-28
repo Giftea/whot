@@ -52,7 +52,7 @@ function addOponnentCardImages(num_cards) {
     }
 }
 
-function addPlayerCardImages(cards, websocket) {
+function addPlayerCardImages(cards, websocket, player_id) {
     const player_cards = document.getElementById("player_cards");
 
     // Remove all children
@@ -74,10 +74,12 @@ function addPlayerCardImages(cards, websocket) {
         newCard.width = 100; // Set width
         newCard.height = 120; // Set height
         console.log('Card: ', card[0])
+        console.log(player_id)
         newCard.onclick = () => {
             const event = {
                 type: "play",
                 card: i,
+                player_id: player_id.textContent.split(" ")[1]
             };
             websocket.send(JSON.stringify(event));
         }
@@ -108,7 +110,7 @@ function receiveMoves(websocket, player_id) {
 
                 addMiddleCardImage(event.game_state["pile_top"])
                 addOponnentCardImages(event.game_state[opponent])
-                addPlayerCardImages(event.game_state[`player_${event.player_id}`], websocket)
+                addPlayerCardImages(event.game_state[`player_${event.player_id}`], websocket, player_id)
                 break;
             
             case "request":
@@ -120,7 +122,9 @@ function receiveMoves(websocket, player_id) {
 
                 addMiddleCardImage(event.game_state["pile_top"])
                 addOponnentCardImages(event.game_state[opponent2])
-                addPlayerCardImages(event.game_state[`player_${event.player_id}`], websocket)
+                console.log(player_id)
+                console.log(event.player_id)
+                addPlayerCardImages(event.game_state[`player_${event.player_id}`], websocket, player_id)
 
                 div.style.visibility = "visible";
 
@@ -133,7 +137,6 @@ function receiveMoves(websocket, player_id) {
                 console.log(event.message)
                 break;
 
-
             case "win":
                 showMessage(`Player ${event.winner} wins!`);
                 // No further messages are expected; close the WebSocket connection.
@@ -142,6 +145,10 @@ function receiveMoves(websocket, player_id) {
             
             case "player_id":
                 player_id.textContent = `Player_id: ${event.player_id}`
+                break;
+            
+            case "message":
+                console.log(event.message)
                 break;
             
             case "failed":
