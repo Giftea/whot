@@ -59,6 +59,8 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
     while gameConnections.num_of_connections < 2:
         await asyncio.sleep(1)
 
+    game.initial_play()
+
     for i, socket in enumerate(gameConnections.connections, start=1):
         event = {
             "type": "play",
@@ -67,62 +69,83 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
         }
 
         await gameConnections.connections[socket].send(json.dumps(event))
+
+    if game.request_mode == True:
+        print("Initial request mode....")
+        for i, socket in enumerate(gameConnections.connections, start=1):
+            event = {
+                "type": "request",
+                "player_id": i,
+                "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+            }
+
+        await gameConnections.connections[socket].send(json.dumps(event))        
     
     async for message in websocket:
         
         event = json.loads(message)
         
-        if event["type"] == "play":
-            card_index = int(event["card"])
-            print("Card Index:", card_index)
-            result = game.play(card_index)
-            
-            if result["status"] == "Played":
+        if event["type"] == "play":           
+            if event["player_id"] == game.game_state()["current_player"]:
 
-                for i, socket in enumerate(gameConnections.connections, start=1):
-                    event = {
-                        "type": "play",
-                        "player_id": i,
-                        "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                card_index = int(event["card"])
+                print("Card Index:", card_index)
+                result = game.play(card_index)
+                
+                if result["status"] == "Played":
+
+                    for i, socket in enumerate(gameConnections.connections, start=1):
+                        event = {
+                            "type": "play",
+                            "player_id": i,
+                            "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                        }
+
+                        await gameConnections.connections[socket].send(json.dumps(event))
+                
+                elif result["status"] == "Failed":
+                    
+                    for i, socket in enumerate(gameConnections.connections, start=1):
+                        event = {
+                            "type": "failed",
+                            "current_player": game.game_state()["current_player"]
                     }
 
-                    await gameConnections.connections[socket].send(json.dumps(event))
-            
-            elif result["status"] == "Failed":
-                 
-                 for i, socket in enumerate(gameConnections.connections, start=1):
+                        await gameConnections.connections[socket].send(json.dumps(event))
+
+                elif result['status'] == "Request":
+
+                    # event = {
+                    #     "type": "request",
+                    #     "current_player": game.game_state()["current_player"],
+                    # }
+
+                    # await gameConnections.connections[game.game_state()["current_player"]].send(json.dumps(event)) 
+                    print()
+
+                    for i, socket in enumerate(gameConnections.connections, start=1):
+                        event = {
+                            "type": "request",
+                            "player_id": i,
+                            "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                        }
+
+                        await gameConnections.connections[socket].send(json.dumps(event))                            
+
+                elif result['status'] == "GameOver":
                     event = {
-                        "type": "failed",
-                        "current_player": game.game_state()["current_player"]
-                   }
-
-                    await gameConnections.connections[socket].send(json.dumps(event))
-
-            elif result['status'] == "Request":
-
-                # event = {
-                #     "type": "request",
-                #     "current_player": game.game_state()["current_player"],
-                # }
-
-                # await gameConnections.connections[game.game_state()["current_player"]].send(json.dumps(event)) 
-
-                for i, socket in enumerate(gameConnections.connections, start=1):
-                    event = {
-                        "type": "request",
-                        "player_id": i,
-                        "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                        "type": "win",
+                        "winner": result['winner'],
                     }
-
-                    await gameConnections.connections[socket].send(json.dumps(event))                            
-
-            elif result['status'] == "GameOver":
+                    websockets.broadcast(gameConnections.connections.values(), json.dumps(event))
+            else:
                 event = {
-                    "type": "win",
-                    "winner": result['winner'],
+                    "type": "message",
+                    "message":"It is not your turn" 
                 }
-                websockets.broadcast(gameConnections.connections.values(), json.dumps(event))
-        
+                
+                await websocket.send(json.dumps(event))
+
         elif event["type"] == "market":
 
             if event["player_id"] == game.game_state()["current_player"]:

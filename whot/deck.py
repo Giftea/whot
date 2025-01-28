@@ -90,3 +90,7 @@ class Deck:
 
         # Place all cards together
         self.cards.extend(angles + circles + crosses + squares + stars + whots)
+    
+    def receive_cards(self, cards):
+        random.shuffle(cards)
+        self.cards = cards

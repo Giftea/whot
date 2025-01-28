@@ -26,6 +26,10 @@ class Whot:
         self.game_running = True
         self.request_mode = False
         self.requested_suit = None
+
+        self.initial_play_state = False
+
+
     
     
     def view(self, player_id):
@@ -59,6 +63,25 @@ class Whot:
         
         return self.current_state
 
+    def initial_play(self):
+
+        if self.initial_play_state == False:
+            self.initial_play_state = True
+
+            if self.pile[0].face == 2:
+                self.handle_pick_two(self.current_player)
+                self.next_player()
+
+            if self.pile[0].face == 8:
+                self.next_player()
+            
+            if self.pile[0].face == 14:
+                self.handle_go_gen()
+            
+            if self.pile[0].face == 20:
+                self.request_mode = True
+
+
     def play(self, card_index: int):
 
         selected_card: Card = self.current_state[self.current_player.player_id][card_index]
@@ -74,21 +97,121 @@ class Whot:
             return {"status": "Request"}
 
         if self.request_mode:
-            if (selected_card.suit == self.requested_suit):
+            # Hold on logic in request mode
+            if (selected_card.suit == self.requested_suit and selected_card.face == 1):
                 self.pile.append(selected_card)
                 self.current_player._cards.remove(selected_card)
+                if (len(self.current_player._cards) == 0):
+                    return {"status": "GameOver", "winner":self.current_player.player_id }
+                self.request_mode = False
+                return {"status": "Played"}
+
+            # Go to market logic
+            if selected_card.suit == self.requested_suit and selected_card.face == 14:
+                self.pile.append(selected_card)
+                self.current_player._cards.remove(selected_card)
+
+                self.handle_go_gen(self.current_player)
+
+                if (len(self.current_player._cards) == 0):
+                    return {"status": "GameOver", "winner":self.current_player.player_id }
+                
+                self.next_player()
+                self.next_player()
+                self.request_mode = False
+                return {"status": "Played"}
+
+            # Suspension logic
+            if selected_card.suit == self.requested_suit and selected_card.face == 8:
+                self.pile.append(selected_card)
+                self.current_player._cards.remove(selected_card)
+            
+                if (len(self.current_player._cards) == 0):
+                    return {"status": "GameOver", "winner":self.current_player.player_id }
+                
+                self.next_player()
+                self.next_player()
+                return {"status": "Played"}
+
+            # Handle pick two
+            if selected_card.suit == self.requested_suit and selected_card.face == 2:
+                self.pile.append(selected_card)
+                self.current_player._cards.remove(selected_card)
+                self.handle_pick_two(self.get_next_player())
+            
+                if (len(self.current_player._cards) == 0):
+                    return {"status": "GameOver", "winner":self.current_player.player_id }
+
+                self.next_player()
+                self.next_player()
+                return {"status": "Played"}  
+
+            # whot card logic
+            if selected_card.suit == self.requested_suit:
+                self.pile.append(selected_card)
+                self.current_player._cards.remove(selected_card)
+
                 if (len(self.current_player._cards) == 0):
                     return {"status": "GameOver", "winner":self.current_player.player_id }
                 
                 self.next_player()
                 self.request_mode = False
-                return {"status": "Played"}
+                return {"status": "Played"}              
+
             else:
                 return {"status": "Failed"}
+        
+        # Hold on logic
+        if (selected_card.face == 1 and selected_card.suit == top_card.suit) or (selected_card.face == 1 and top_card.face == 1):
+            print("Hold on!")
+            self.pile.append(selected_card)
+            self.current_player._cards.remove(selected_card)
+            if (len(self.current_player._cards) == 0):
+                return {"status": "GameOver", "winner":self.current_player.player_id }
+            return {"status": "Played"}
+        
+        # Go to market logic
+        if (selected_card.face == 14 and selected_card.suit == top_card.suit) or (selected_card.face == 14 and top_card.face == 14):
+            self.pile.append(selected_card)
+            self.current_player._cards.remove(selected_card)
+            self.handle_go_gen(self.current_player)
+
+            if (len(self.current_player._cards) == 0):
+                return {"status": "GameOver", "winner":self.current_player.player_id }
+            
+            self.next_player()
+            self.next_player()
+            return {"status": "Played"}
+        
+        # Suspension logic
+        if (selected_card.face == 8 and selected_card.suit == top_card.suit) or (selected_card.face == 8 and top_card.face == 8):
+            self.pile.append(selected_card)
+            self.current_player._cards.remove(selected_card)
+            
+            if (len(self.current_player._cards) == 0):
+                return {"status": "GameOver", "winner":self.current_player.player_id }
+            
+            self.next_player()
+            self.next_player()
+            return {"status": "Played"}
+        
+        # Pick two logic
+        if (selected_card.face == 2 and selected_card.suit == top_card.suit) or (selected_card.face == 2 and top_card.face == 2):
+            self.pile.append(selected_card)
+            self.current_player._cards.remove(selected_card)
+            self.handle_pick_two(self.get_next_player())
+            
+            if (len(self.current_player._cards) == 0):
+                return {"status": "GameOver", "winner":self.current_player.player_id }
+            
+            self.next_player()
+            self.next_player()
+            return {"status": "Played"}                     
 
         if (selected_card.face == top_card.face or selected_card.suit == top_card.suit ):
             self.pile.append(selected_card)
             self.current_player._cards.remove(selected_card)
+
             if (len(self.current_player._cards) == 0):
                 return {"status": "GameOver", "winner":self.current_player.player_id }
                         
@@ -101,6 +224,12 @@ class Whot:
         # print(selected_card)
     
     def market(self):
+        
+        if self.gen.cards == []:
+            new_cards = self.pile[:-1]
+            self.pile = self.pile[-1:]
+            self.gen.receive_cards(new_cards)
+
         recieved_card = self.gen.deal_card(1)
         self.current_player.recieve(recieved_card)
         self.next_player()
@@ -109,16 +238,19 @@ class Whot:
 
         self.request_mode = True
 
-        try:
-            self.requested_suit = Suit(card_index)
-            self.next_player()
-            return {"requested_suit": self.requested_suit}
-        except ValueError:
-            # Handle the case where card_index doesn't match any Suit
+        if card_index == 5:
             pass
-
+        else:
+            try:
+                self.requested_suit = Suit(card_index)
+                self.next_player()
+                return {"requested_suit": self.requested_suit}
+            except ValueError:
+                # Handle the case where card_index doesn't match any Suit
+                pass
     
     def next_player(self, skip=1):
+
         n = self.players.index(self.current_player)
         try:
             self.current_player = self.players[n + skip]
@@ -131,6 +263,42 @@ class Whot:
             return self.players[n + 1]
         except IndexError:
             return self.players[0]
+    
+    def handle_go_gen(self, exempt_player: Player | None = None):
+        """
+        Method to handle going gen
+        """
+
+        # current_player = self.current_player
+        
+        if exempt_player:
+            gen_list = self.players.copy()
+            gen_list.remove(exempt_player)
+        
+            print(f"All players except {exempt_player} Go Gen: ")
+            for player in gen_list:
+                recieved_card = self.gen.deal_card(1)
+                player.recieve(recieved_card)
+                print(f"{player} you recieved: {recieved_card}")
+
+        else:
+            print(f"Everyone Go Gen: ")
+            for player in self.players:
+                recieved_card = self.gen.deal_card(1)
+                player.recieve(recieved_card)
+                print(f"{player} you recieved: {recieved_card}")
+    
+    def handle_pick_two(self, player: Player | list[Player]):
+        """
+        Method to handle giving players pick two
+        """
+        # get_next_player = self.get_next_player()
+
+        print(f"{player} Pick two: ")
+        recieved_card = self.gen.deal_card(2)
+        player.recieve(recieved_card)
+        print(f"{player} you recieved: {recieved_card}")
+
 
 # Old Engine
 
