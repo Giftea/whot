@@ -82,7 +82,6 @@ class Deck:
         squares = [Card(Suit.SQUARE, square) for square in CROSSES_AND_SQUARES]
 
         # Create star cards
-
         stars = [Card(Suit.STAR, star) for star in STARS]
 
         # Create whot cards
@@ -94,3 +93,20 @@ class Deck:
     def receive_cards(self, cards):
         random.shuffle(cards)
         self.cards = cards
+    
+    def draw_card(self, card: Card):
+        card_index = self.cards.index(card)
+        drawn_card = self.cards[card_index]
+        del self.cards[card_index]
+        return drawn_card
+    
+    def draw_cards(self, cards: list[Card]):
+        drawn_cards = []
+
+        for card in cards:
+            drawn_cards.append(self.draw_card(card))
+        
+        return drawn_cards
+
+
+
