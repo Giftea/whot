@@ -7,18 +7,63 @@ from enum import Enum
 class Whot:
     ## Whot Engine
 
-    def __init__(self, number_of_players: int, number_of_cards: int = 4):
+    def __init__(self, number_of_players: int = 2, number_of_cards: int = 4):
+        """
+        This would be used to configure the whot engine.
+        """
+
+        self.num_of_players = number_of_players
+        self.num_of_cards = number_of_cards
+
+    
+    def test_mode(self, test_pile_card: Card, test_player_cards: list[Card]):
+        """
+        In test mode you can set the top pile, players card, opponents
+        set top pile
+        select the suit name and number of card for both players and opponents
+        Let's simpl
+        """
+        deck = Deck()
+        deck.shuffle()
+
+        # create test pile
+        self.pile: list[Card] = []
+        self.pile.append(deck.draw_card(test_pile_card))
+
+        # Create test player 
+        self.players: list[Player] = []
+        self.players.append(Player("player_1"))
+
+        self.players[0].recieve(deck.draw_cards(test_player_cards))
+        
+        for i in range(1, self.num_of_players):
+            self.players.append(Player(f"player_{i + 1}"))
+
+        for p in self.players[1:]:
+            p.recieve(deck.deal_card(self.num_of_cards))       
+
+        
+        self.gen: Deck = deck
+        self.current_player: Player = self.players[0]
+        self.game_running = True
+        self.request_mode = False
+        self.requested_suit = None
+
+        self.initial_play_state = False
+        
+
+    def game_mode(self):
         # Create deck and shuffle
         deck = Deck()
         deck.shuffle()
 
-        # Create players 
+        # Create players
         self.players: list[Player] = []
-        for i in range(number_of_players):
+        for i in range(self.num_of_players):
             self.players.append(Player(f"player_{i + 1}"))
         
         for p in self.players:
-            p.recieve(deck.deal_card(number_of_cards))
+            p.recieve(deck.deal_card(self.num_of_cards))
         
         self.pile: list[Card] = deck.deal_card(1)
         self.gen: Deck = deck
@@ -28,8 +73,6 @@ class Whot:
         self.requested_suit = None
 
         self.initial_play_state = False
-
-
     
     
     def view(self, player_id):
@@ -46,13 +89,13 @@ class Whot:
 
         return view
     
-    @property
-    def num_of_players(self):
-        """
-        Get the number of players in the game
-        """
+    # @property
+    # def num_of_players(self):
+    #     """
+    #     Get the number of players in the game
+    #     """
 
-        return len(self.players)
+    #     return len(self.players)
     
     def game_state(self):
         self.current_state = { "current_player": self.current_player.player_id }
@@ -63,7 +106,7 @@ class Whot:
         
         return self.current_state
 
-    def initial_play(self):
+    def start_game(self):
 
         if self.initial_play_state == False:
             self.initial_play_state = True
