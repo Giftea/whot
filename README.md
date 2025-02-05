@@ -60,17 +60,10 @@ pip install -r requirements.txt
 Then run the server:
 
 ```bash
-python3 server.py
+python3 main.py
 ```
 
-To run the frontend you can use any webserver of your choice. I am using python's web server:
-
-```bash
-python -m http.server
-```
-
-The application would be running on `127.0.0.1:8000`.
-
+The application will run on all available addresses on the system.
 
 ## Contributions
 

@@ -195,7 +195,7 @@ async def start(websocket: ClientConnection):
     gameConnection = GameConnection(game)
     player_id = gameConnection.add_connection(websocket)
 
-    join_key = secrets.token_urlsafe(12)
+    join_key = secrets.token_urlsafe(4)
     JOIN[join_key] = gameConnection
 
     try:
@@ -219,13 +219,13 @@ async def handler(websocket: ClientConnection):
     else:
         await start(websocket)
 
-async def main():
-    async with serve(handler, "localhost", 8765):
-        print("Server running on: localhost:8765")
-        await asyncio.get_running_loop().create_future()  # run forever
+# async def main():
+#     async with serve(handler, "localhost", 8765):
+#         print("Server running on: localhost:8765")
+#         await asyncio.get_running_loop().create_future()  # run forever
 
-if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Server shut down by user.")
+# if __name__ == '__main__':
+#     try:
+#         asyncio.run(main())
+#     except KeyboardInterrupt:
+#         print("Server shut down by user.")
