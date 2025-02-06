@@ -1,8 +1,6 @@
 import asyncio
 import websockets
-from websockets.asyncio.server import serve
 from websockets.asyncio.client import ClientConnection
-
 from whot import Whot
 
 import json

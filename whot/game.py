@@ -1,11 +1,37 @@
 from .deck import Deck, Card, Suit
 from .player import Player
+import copy
 
 from enum import Enum
 
+# Event source note:
+# The store eve
+
+def serialize_game_state(game_state: dict):
+    state = game_state.copy()
+
+    state['pile_top'] = str(state['pile_top'])
+    keys: list[str] = state.keys()
+
+    for key in keys:
+        if key.startswith("player_"):
+                state[key] = [str(card) for card in state[key]]
+
+    return state
+
+def event_storage(func):
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        event = serialize_game_state(self.game_state())
+        self.event_store.append(event)  
+        return result
+    return wrapper
+
+
+
 
 class Whot:
-    ## Whot Engine
+    # Whot Engine
 
     def __init__(self, number_of_players: int = 2, number_of_cards: int = 4):
         """
@@ -14,6 +40,7 @@ class Whot:
 
         self.num_of_players = number_of_players
         self.num_of_cards = number_of_cards
+        self.event_store = []
 
     
     def test_mode(self, test_pile_card: Card, test_player_cards: list[Card]):
@@ -51,6 +78,7 @@ class Whot:
 
         self.initial_play_state = False
         
+        self.event_store.append(serialize_game_state(self.game_state()))
 
     def game_mode(self):
         # Create deck and shuffle
@@ -73,6 +101,8 @@ class Whot:
         self.requested_suit = None
 
         self.initial_play_state = False
+
+        self.event_store.append(serialize_game_state(self.game_state()))
     
     
     def view(self, player_id):
@@ -124,7 +154,7 @@ class Whot:
             if self.pile[0].face == 20:
                 self.request_mode = True
 
-
+    @event_storage
     def play(self, card_index: int):
 
         selected_card: Card = self.current_state[self.current_player.player_id][card_index]
@@ -266,6 +296,7 @@ class Whot:
 
         # print(selected_card)
     
+    @event_storage
     def market(self):
         
         if self.gen.cards == []:
