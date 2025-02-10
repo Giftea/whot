@@ -18,12 +18,12 @@ STARS = CIRCLES_AND_TRIANGLES[:7]
 
 
 class Suit(Enum):
-    CIRCLE = 0
-    SQUARE = 1
-    STAR = 2
-    CROSS = 3
-    TRIANGLE = 4
-    WHOT = 5
+    CIRCLE = "circle"
+    SQUARE = "square"
+    STAR = "star"
+    CROSS = "cross"
+    TRIANGLE = "triangle"
+    WHOT = "whot"
 
     def __str__(self):
         return self.name

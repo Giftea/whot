@@ -1,6 +1,8 @@
 from .deck import Deck, Card, Suit
 from .player import Player
-import copy
+import json
+import uuid
+import os
 
 from enum import Enum
 
@@ -23,8 +25,11 @@ def event_storage(func):
     def wrapper(self, *args, **kwargs):
         result = func(self, *args, **kwargs)
         event = serialize_game_state(self.game_state())
-        self.event_store.append(event)  
-        return result
+        if len(self.event_store) >=  1:
+            if self.event_store[-1] == event:
+                return result
+            self.event_store.append(event)  
+            return result
     return wrapper
 
 
@@ -111,9 +116,12 @@ class Whot:
         """
         view = {}
 
+        view["current_player"] = self.current_player.player_id
+        view["pile_top"] = str(self.pile[-1])
+
         for p in self.players:
             if (p.player_id == player_id):
-                view[p.player_id] = p._cards
+                view[p.player_id] = [ str(card) for card in p._cards ]
             else:
                 view[p.player_id] = len(p._cards)
 
@@ -136,6 +144,7 @@ class Whot:
         
         return self.current_state
 
+    @event_storage
     def start_game(self):
 
         if self.initial_play_state == False:
@@ -205,19 +214,6 @@ class Whot:
                 self.next_player()
                 self.next_player()
                 return {"status": "Played"}
-
-            # Handle pick two
-            if selected_card.suit == self.requested_suit and selected_card.face == 2:
-                self.pile.append(selected_card)
-                self.current_player._cards.remove(selected_card)
-                self.handle_pick_two(self.get_next_player())
-            
-                if (len(self.current_player._cards) == 0):
-                    return {"status": "GameOver", "winner":self.current_player.player_id }
-
-                self.next_player()
-                self.next_player()
-                return {"status": "Played"}  
 
             # whot card logic
             if selected_card.suit == self.requested_suit:
@@ -308,15 +304,15 @@ class Whot:
         self.current_player.recieve(recieved_card)
         self.next_player()
 
-    def request(self, card_index):
+    def request(self, suit):
 
         self.request_mode = True
 
-        if card_index == 5:
+        if suit == "whot":
             pass
         else:
             try:
-                self.requested_suit = Suit(card_index)
+                self.requested_suit = Suit(suit)
                 self.next_player()
                 return {"requested_suit": self.requested_suit}
             except ValueError:
@@ -372,6 +368,36 @@ class Whot:
         recieved_card = self.gen.deal_card(2)
         player.recieve(recieved_card)
         print(f"{player} you recieved: {recieved_card}")
+    
+    def save(self, path):
+        """
+        Appends a new game event to the JSON file while preserving existing data.
+        """
+
+        game = {
+            "id": str(uuid.uuid4()),
+            "moves": self.event_store
+        }
+
+        # Check if file exists and has content
+        if os.path.exists(path) and os.path.getsize(path) > 0:
+            with open(path, "r") as f:
+                try:
+                    data = json.load(f)
+                    if not isinstance(data, list):
+                        data = [data]  # Convert old format to list
+                except json.JSONDecodeError:
+                    data = []
+        else:
+            data = []
+
+        data.append(game)  # Append new game
+
+        with open(path, "w") as f:
+            json.dump(data, f, indent=4)  # Pretty-print JSON for readability
+
+        return True
+
 
 
 # Old Engine

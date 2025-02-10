@@ -63,7 +63,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
         event = {
             "type": "play",
             "player_id": i,
-            "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+            "game_state": game.view(f"player_{i}")
         }
 
         await gameConnections.connections[socket].send(json.dumps(event))
@@ -74,7 +74,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
             event = {
                 "type": "request",
                 "player_id": i,
-                "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                "game_state": game.view(f"player_{i}")
             }
 
         await gameConnections.connections[socket].send(json.dumps(event))        
@@ -96,7 +96,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                         event = {
                             "type": "play",
                             "player_id": i,
-                            "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                            "game_state": game.view(f"player_{i}")
                         }
 
                         await gameConnections.connections[socket].send(json.dumps(event))
@@ -125,7 +125,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                         event = {
                             "type": "request",
                             "player_id": i,
-                            "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                            "game_state": game.view(f"player_{i}")
                         }
 
                         await gameConnections.connections[socket].send(json.dumps(event))                            
@@ -135,6 +135,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                         "type": "win",
                         "winner": result['winner'],
                     }
+                    game.save("game.json")
                     websockets.broadcast(gameConnections.connections.values(), json.dumps(event))
             else:
                 event = {
@@ -154,13 +155,13 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                     event = {
                         "type": "play",
                         "player_id": i,
-                        "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                        "game_state": game.view(f"player_{i}")
                     }
 
                     await gameConnections.connections[socket].send(json.dumps(event))
 
         elif event["type"] == "request":
-            suit = int(event["suit"])
+            suit = event["suit"]
 
             requester = game.game_state()['current_player']
 
@@ -170,7 +171,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                 event = {
                     "type": "request_card",
                     "message": f"{requester} requested for {card}",
-                    "game_state": serialize_game_state(game.game_state(), f"player_{i}")
+                    "game_state": game.view(f"player_{i}")
                 }
 
                 await gameConnections.connections[socket].send(json.dumps(event))
