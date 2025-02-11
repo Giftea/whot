@@ -33,8 +33,6 @@ def event_storage(func):
     return wrapper
 
 
-
-
 class Whot:
     # Whot Engine
 
