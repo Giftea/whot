@@ -45,8 +45,9 @@ class Whot:
         self.num_of_cards = number_of_cards
         self.event_store = []
 
-    
-    def test_mode(self, test_pile_card: Card, test_player_cards: list[Card]):
+    # Accept a dictionary with the following key value pairing
+    # player id, Cards    
+    def test_mode(self, test_pile_card: Card, test_players: list[list[Card]]):
         """
         In test mode you can set the top pile, players card, opponents
         set top pile
@@ -62,15 +63,19 @@ class Whot:
 
         # Create test player 
         self.players: list[Player] = []
-        self.players.append(Player("player_1"))
 
-        self.players[0].recieve(deck.draw_cards(test_player_cards))
+        for player_id, cards in enumerate(test_players, start=1):
+            self.players.append(Player(f"player_{player_id}"))
+            self.players[player_id - 1].recieve(deck.draw_cards(cards))
+
+
+        # self.players[0].recieve(deck.draw_cards(test_player_cards))
         
-        for i in range(1, self.num_of_players):
-            self.players.append(Player(f"player_{i + 1}"))
+        # for i in range(1, self.num_of_players):
+        #     self.players.append(Player(f"player_{i + 1}"))
 
-        for p in self.players[1:]:
-            p.recieve(deck.deal_card(self.num_of_cards))       
+        # for p in self.players[1:]:
+        #     p.recieve(deck.deal_card(self.num_of_cards))       
 
         
         self.gen: Deck = deck

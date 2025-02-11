@@ -9,11 +9,21 @@ class TestWhot(unittest.TestCase):
         card1 = Card(Suit.CIRCLE, 2)
         card2 = Card(Suit.WHOT, 20)
 
-        test_player = [card1, card2]
+        card3 = Card(Suit.TRIANGLE, 1)
+        card4 = Card(Suit.WHOT, 20)
+
+        card5 = Card(Suit.STAR, 1)
+        card6 = Card(Suit.STAR, 2) 
+
+        card7 = Card(Suit.STAR, 3)
+        card8 = Card(Suit.STAR, 4)
+
+
+        test_players = [[card1, card2], [card3, card4], [card5, card6], [card7, card8]]
 
         w = Whot(4, 2)
 
-        w.test_mode(pile, test_player)
+        w.test_mode(pile, test_players)
 
         w.start_game()
 
@@ -30,11 +40,20 @@ class TestWhot(unittest.TestCase):
         card1 = Card(Suit.CIRCLE, 14)
         card2 = Card(Suit.WHOT, 20)
 
-        test_player = [card1, card2]
+        card3 = Card(Suit.TRIANGLE, 1)
+        card4 = Card(Suit.WHOT, 20)
+
+        card5 = Card(Suit.STAR, 1)
+        card6 = Card(Suit.STAR, 2) 
+
+        card7 = Card(Suit.STAR, 3)
+        card8 = Card(Suit.STAR, 4)
+
+        test_players = [[card1, card2], [card3, card4], [card5, card6], [card7, card8]]
 
         w = Whot(4, 2)
 
-        w.test_mode(pile, test_player)
+        w.test_mode(pile, test_players)
 
         w.start_game()
 
@@ -51,11 +70,18 @@ class TestWhot(unittest.TestCase):
         card1 = Card(Suit.CIRCLE, 8)
         card2 = Card(Suit.WHOT, 20)
 
-        test_player = [card1, card2]
+        card3 = Card(Suit.TRIANGLE, 1)
+        card4 = Card(Suit.WHOT, 20)
+
+        card5 = Card(Suit.STAR, 1)
+        card6 = Card(Suit.STAR, 2) 
+
+
+        test_players = [[card1, card2], [card3, card4], [card5, card6]]
 
         w = Whot(3, 2)
 
-        w.test_mode(pile, test_player)
+        w.test_mode(pile, test_players)
 
         w.start_game()
 
@@ -70,11 +96,15 @@ class TestWhot(unittest.TestCase):
         card2 = Card(Suit.CIRCLE, 4)
         card3 = Card(Suit.WHOT, 20)
 
-        test_player = [card1, card2, card3]
+        card4 = Card(Suit.TRIANGLE, 5)
+        card5 = Card(Suit.STAR, 7)
+        card6 = Card(Suit.SQUARE, 10)
+
+        test_players = [[card1, card2, card3], [card4, card5, card6]]
 
         w = Whot(3, 3)
 
-        w.test_mode(pile, test_player)
+        w.test_mode(pile, test_players)
 
         w.start_game()
 
@@ -95,8 +125,16 @@ class TestWhot(unittest.TestCase):
         card2 = Card(Suit.CIRCLE, 4)
         card3 = Card(Suit.WHOT, 20)
 
-        test_player = [card1, card2, card3]
+        card4 = Card(Suit.SQUARE, 5)
+        card5 = Card(Suit.CIRCLE, 10)
+        card6 = Card(Suit.SQUARE, 11)
 
+        card7 = Card(Suit.STAR, 8)
+        card8 = Card(Suit.STAR, 2)
+        card9 = Card(Suit.CROSS, 11)
+
+        test_player = [[card1, card2, card3], [card4, card5, card6], [card7, card8, card9]]
+        
         w = Whot(3, 3)
 
         w.test_mode(pile, test_player)
@@ -109,6 +147,14 @@ class TestWhot(unittest.TestCase):
         w.request("circle")
         
         self.assertEqual(w.request_mode, True)
+
+        self.assertEqual(w.game_state()["current_player"], "player_2")
+
+        w.market()
+
+        self.assertEqual(w.game_state()["current_player"], "player_3")
+
+
 
 
 if __name__ == '__main__':

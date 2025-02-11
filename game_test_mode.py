@@ -8,13 +8,13 @@ card1 = Card(Suit.WHOT, 20)
 card2 = Card(Suit.TRIANGLE, 14)
 card3 = Card(Suit.SQUARE, 2)
 card4 = Card(Suit.STAR, 8)
-card5 = Card(Suit.CROSS, 1)
+# card5 = Card(Suit.CROSS, 1)
 
-test_player =  [card1, card2, card3, card4, card5]
+test_players =  [[card1, card2], [card3, card4]]
 
 w = Whot()
 
-w.test_mode(test_pile, test_player)
+w.test_mode(test_pile, test_players)
 
 w.start_game()
 
