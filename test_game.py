@@ -32,6 +32,8 @@ class TestSpecialCards(unittest.TestCase):
         self.assertEqual(len(w.game_state()["player_3"]), 2)
         self.assertEqual(len(w.game_state()["player_3"]), 2)
 
+        self.assertEqual(w.game_state()["current_player"], "player_3")
+
     def test_go_gen(self):
         pile = Card(Suit.CIRCLE, 3)
 

@@ -29,7 +29,7 @@ def event_storage(func):
     return wrapper
 
 
-class Whot:
+class Engine:
     # Whot Engine
 
     def __init__(self, number_of_players: int = 2, number_of_cards: int = 4):
@@ -335,7 +335,7 @@ class Whot:
         return True
     
 
-class TestWhot(Whot):
+class TestEngine(Engine):
 
     """
     Test Whot Engine
