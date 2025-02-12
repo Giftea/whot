@@ -90,7 +90,7 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
                 print("Card Index:", card_index)
                 result = game.play(card_index)
                 
-                if result["status"] == "Played":
+                if result["status"] == "Success":
 
                     for i, socket in enumerate(gameConnections.connections, start=1):
                         event = {
@@ -190,7 +190,6 @@ async def join(websocket: ClientConnection, join_key):
 
 async def start(websocket: ClientConnection):
     game = Whot(2, number_of_cards=4)
-    game.game_mode()
     gameConnection = GameConnection(game)
     player_id = gameConnection.add_connection(websocket)
 
