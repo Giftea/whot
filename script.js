@@ -40,7 +40,6 @@ function addOponnentCardImages(num_cards) {
     for (let i = 0; i < num_cards; i++) {
         // Create a new image element
         const newCard = document.createElement('img');
-
         // Set attributes for the image
         newCard.src = 'assets/images/whot_back.png'; // Path to the image
         newCard.alt = 'Opponent Card'; // Alternative text
@@ -190,20 +189,11 @@ function sendMoves(websocket, card, playBtn) {
     });
 }
 
-
-
 window.addEventListener("DOMContentLoaded", () => {
     // Open the WebSocket connection and register event handlers.
-    const card = document.getElementById("card");
-    // const playBtn = document.getElementById("play");
     const market = document.getElementById("market");
-    // const requestBtn = document.getElementById("requestBtn");
-    // const requestCard = document.getElementById("request");
     const player_id = document.getElementById("player_id");
     const i_need = document.getElementById("i_need");
-
-
-    console.log(player_id);
     
     const websocket = new WebSocket("ws://localhost:8765/");
 
@@ -231,18 +221,4 @@ window.addEventListener("DOMContentLoaded", () => {
             websocket.send(JSON.stringify(event));            
         }
     }
-
-    // for (let i = 0; i <= 5; i++){
-
-    // } 
-    // requestBtn.onclick = () => {
-    //     if (requestCard.value ) {
-    //         const event = {
-    //             type: "request",
-    //             suit: requestCard.value
-    //         };
-    //         console.log("Request!!")
-    //         websocket.send(JSON.stringify(event));
-    //     }
-    // }
 });
