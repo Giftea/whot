@@ -1,7 +1,6 @@
 from whot import Whot
 
 g = Whot(2, number_of_cards=2)
-g.game_mode()
 
 while True:
     print(g.game_state())

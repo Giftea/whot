@@ -40,7 +40,6 @@ function addOponnentCardImages(num_cards) {
     for (let i = 0; i < num_cards; i++) {
         // Create a new image element
         const newCard = document.createElement('img');
-
         // Set attributes for the image
         newCard.src = 'assets/images/whot_back.png'; // Path to the image
         newCard.alt = 'Opponent Card'; // Alternative text
@@ -134,7 +133,7 @@ function receiveMoves(websocket, player_id) {
                 current_player.textContent = `Current Player: ${event.game_state["current_player"]}`
                 let div2 = document.getElementById("i_need")
                 div2.style.visibility = "hidden"
-                console.log(event.message)
+                showMessage(event.message)
                 break;
 
             case "win":
@@ -188,37 +187,18 @@ function sendMoves(websocket, card, playBtn) {
             websocket.send(JSON.stringify(event));
         }
     });
-
-    // When clicking a column, send a "play" event for a move in that column.
-    // marketBtn.addEventListener("click", () => {
-    //     const event = {
-    //         type: "market",
-    //     };
-    //     console.log("Market!!")
-    //     websocket.send(JSON.stringify(event));
-
-    // });
 }
-
-
 
 window.addEventListener("DOMContentLoaded", () => {
     // Open the WebSocket connection and register event handlers.
-    const card = document.getElementById("card");
-    // const playBtn = document.getElementById("play");
     const market = document.getElementById("market");
-    const requestBtn = document.getElementById("requestBtn");
-    const requestCard = document.getElementById("request");
     const player_id = document.getElementById("player_id");
-
-    console.log(player_id);
+    const i_need = document.getElementById("i_need");
     
     const websocket = new WebSocket("ws://localhost:8765/");
 
     initGame(websocket);
     receiveMoves(websocket, player_id);
-    // sendMoves(websocket, card, playBtn);
-
 
     market.onclick = () => {
         const player = player_id.textContent.split(" ")
@@ -230,14 +210,15 @@ window.addEventListener("DOMContentLoaded", () => {
         websocket.send(JSON.stringify(event));        
     }
 
-    requestBtn.onclick = () => {
-        if (requestCard.value ) {
+    for ( const button of i_need.children){
+        button.onclick = () => {
             const event = {
                 type: "request",
-                suit: requestCard.value
+                suit: button.id
             };
             console.log("Request!!")
-            websocket.send(JSON.stringify(event));
+            i_need.style.visibility = "hidden"
+            websocket.send(JSON.stringify(event));            
         }
     }
 });
