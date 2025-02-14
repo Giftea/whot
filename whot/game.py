@@ -162,7 +162,22 @@ class Engine:
                 
                 self.next_player()
                 self.next_player()
+                self.request_mode = False
                 return {"status": "Success"}
+            
+            # Pick two logic
+            if (selected_card.suit == self.requested_suit and  selected_card.face == 2 ):
+                self.pile.append(selected_card)
+                self.current_player._cards.remove(selected_card)
+                self.handle_pick_two(self.get_next_player())
+            
+                if (len(self.current_player._cards) == 0):
+                    return {"status": "GameOver", "winner":self.current_player.player_id }
+            
+                self.next_player()
+                self.next_player()
+                self.request_mode = False
+                return {"status": "Success"}  
 
             # whot card logic
             if selected_card.suit == self.requested_suit:

@@ -69,15 +69,16 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
         await gameConnections.connections[socket].send(json.dumps(event))
 
     if game.request_mode == True:
-        print("Initial request mode....")
-        for i, socket in enumerate(gameConnections.connections, start=1):
-            event = {
-                "type": "request",
-                "player_id": i,
-                "game_state": game.view(f"player_{i}")
-            }
+        current_player = game.current_player.player_id
+        
+        event = {
+            "type": "request",
+            "player_id": 1,
+            "game_state": game.view(f"player_1")
+        }
 
-        await gameConnections.connections[socket].send(json.dumps(event))        
+        await gameConnections.connections[current_player].send(json.dumps(event))
+       
     
     async for message in websocket:
         
@@ -87,7 +88,6 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
             if event["player_id"] == game.game_state()["current_player"]:
 
                 card_index = int(event["card"])
-                print("Card Index:", card_index)
                 result = game.play(card_index)
                 
                 if result["status"] == "Success":
@@ -113,22 +113,27 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
 
                 elif result['status'] == "Request":
 
-                    # event = {
-                    #     "type": "request",
-                    #     "current_player": game.game_state()["current_player"],
-                    # }
-
-                    # await gameConnections.connections[game.game_state()["current_player"]].send(json.dumps(event)) 
-                    print()
+                    current_player = game.current_player.player_id
 
                     for i, socket in enumerate(gameConnections.connections, start=1):
-                        event = {
-                            "type": "request",
-                            "player_id": i,
-                            "game_state": game.view(f"player_{i}")
-                        }
 
-                        await gameConnections.connections[socket].send(json.dumps(event))                            
+                        if socket == current_player:
+                            
+                            event = {
+                                "type": "request",
+                                "player_id": i,
+                                "game_state": game.view(f"player_{i}")
+                            }
+
+                        else:
+
+                            event = {
+                                "type": "play",
+                                "player_id": i,
+                                "game_state": game.view(f"player_{i}")
+                            }
+
+                        await gameConnections.connections[socket].send(json.dumps(event))
 
                 elif result['status'] == "GameOver":
                     event = {
@@ -168,13 +173,15 @@ async def play(websocket: ClientConnection, game: Whot, player_id: str, gameConn
             card = str(game.request(suit)['requested_suit'])
 
             for i, socket in enumerate(gameConnections.connections, start=1):
-                event = {
-                    "type": "request_card",
-                    "message": f"{requester} requested for {card}",
-                    "game_state": game.view(f"player_{i}")
-                }
 
-                await gameConnections.connections[socket].send(json.dumps(event))
+                if socket != requester:
+                    event = {
+                        "type": "request_card",
+                        "message": f"{requester} requested for {card}",
+                        "game_state": game.view(f"player_{i}")
+                    }
+
+                    await gameConnections.connections[socket].send(json.dumps(event))
 
 async def join(websocket: ClientConnection, join_key):
     try:
@@ -216,14 +223,3 @@ async def handler(websocket: ClientConnection):
         await join(websocket, event["join"])
     else:
         await start(websocket)
-
-# async def main():
-#     async with serve(handler, "localhost", 8765):
-#         print("Server running on: localhost:8765")
-#         await asyncio.get_running_loop().create_future()  # run forever
-
-# if __name__ == '__main__':
-#     try:
-#         asyncio.run(main())
-#     except KeyboardInterrupt:
-#         print("Server shut down by user.")
