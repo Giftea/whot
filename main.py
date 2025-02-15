@@ -3,7 +3,7 @@ import asyncio
 from websockets.asyncio.server import serve
 from server import handler
 
-PORT = 8080
+PORT = 8000
 WEBSOCKET_PORT = 8765
 
 # Serve index.html
