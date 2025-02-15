@@ -17,18 +17,6 @@ def serialize_game_state(game_state: dict):
 
     return state
 
-def event_storage(func):
-    def wrapper(self, *args, **kwargs):
-        result = func(self, *args, **kwargs)
-        event = serialize_game_state(self.game_state())
-        if len(self.event_store) >=  1:
-            if self.event_store[-1] == event:
-                return result
-            self.event_store.append(event)  
-            return result
-    return wrapper
-
-
 class Engine:
     # Whot Engine
 
@@ -59,6 +47,8 @@ class Engine:
         self.game_running = True
         self.request_mode = False
         self.requested_suit = None
+        self.pick_mode = False
+        self.num_of_picks = 2
 
         self.initial_play_state = False
 
@@ -90,6 +80,18 @@ class Engine:
         
         return self.current_state
 
+    @staticmethod
+    def event_storage(func):
+        def wrapper(self, *args, **kwargs):
+            result = func(self, *args, **kwargs)
+            event = serialize_game_state(self.game_state())
+            if len(self.event_store) >=  1:
+                if self.event_store[-1] == event:
+                    return result
+                self.event_store.append(event)  
+                return result
+        return wrapper    
+
     @event_storage
     def start_game(self):
 
@@ -97,8 +99,7 @@ class Engine:
             self.initial_play_state = True
 
             if self.pile[0].face == 2:
-                self.handle_pick_two(self.current_player)
-                self.next_player()
+                self.pick_mode = True
 
             if self.pile[0].face == 8:
                 self.next_player()
@@ -115,12 +116,14 @@ class Engine:
         selected_card: Card = self.current_state[self.current_player.player_id][card_index]
         top_card = self.pile[-1]
 
-        if (selected_card.suit == Suit.WHOT):
+        if (selected_card.suit == Suit.WHOT and self.pick_mode == False):
             self.pile.append(selected_card)
             self.current_player._cards.remove(selected_card)
 
             if (len(self.current_player._cards) == 0):
                 return {"status": "GameOver", "winner":self.current_player.player_id }
+            
+            self.request_mode = True
             
             return {"status": "Request"}
 
@@ -165,19 +168,16 @@ class Engine:
                 self.request_mode = False
                 return {"status": "Success"}
             
-            # Pick two logic
-            if (selected_card.suit == self.requested_suit and  selected_card.face == 2 ):
+            if selected_card.suit == self.requested_suit and selected_card.face == 2:
                 self.pile.append(selected_card)
                 self.current_player._cards.remove(selected_card)
-                self.handle_pick_two(self.get_next_player())
-            
+
                 if (len(self.current_player._cards) == 0):
                     return {"status": "GameOver", "winner":self.current_player.player_id }
             
+                self.pick_mode = True
                 self.next_player()
-                self.next_player()
-                self.request_mode = False
-                return {"status": "Success"}  
+                return {"status": "Success"}
 
             # whot card logic
             if selected_card.suit == self.requested_suit:
@@ -193,7 +193,36 @@ class Engine:
 
             else:
                 return {"status": "Failed"}
-        
+
+        if self.pick_mode:
+            if (selected_card.face != 2):
+                return {"status": "Failed"}
+            
+            if (selected_card.face == 2):
+                self.pile.append(selected_card)
+                self.current_player._cards.remove(selected_card)
+                
+                if (len(self.current_player._cards) == 0):
+                    return {"status": "GameOver", "winner":self.current_player.player_id }
+                
+                
+                self.num_of_picks += 2 
+                self.next_player()
+
+                return {"status": "Success"}
+
+        if (selected_card.face == 2 and selected_card.suit == top_card.suit) or (selected_card.face == 2 and top_card.face == 2):
+            self.pile.append(selected_card)
+            self.current_player._cards.remove(selected_card)
+
+            if (len(self.current_player._cards) == 0):
+                return {"status": "GameOver", "winner":self.current_player.player_id }
+            
+            self.pick_mode = True
+            self.next_player()
+            return {"status": "Success"}
+
+
         # Hold on logic
         if (selected_card.face == 1 and selected_card.suit == top_card.suit) or (selected_card.face == 1 and top_card.face == 1):
             self.pile.append(selected_card)
@@ -225,20 +254,7 @@ class Engine:
             
             self.next_player()
             self.next_player()
-            return {"status": "Success"}
-        
-        # Pick two logic
-        if (selected_card.face == 2 and selected_card.suit == top_card.suit) or (selected_card.face == 2 and top_card.face == 2):
-            self.pile.append(selected_card)
-            self.current_player._cards.remove(selected_card)
-            self.handle_pick_two(self.get_next_player())
-            
-            if (len(self.current_player._cards) == 0):
-                return {"status": "GameOver", "winner":self.current_player.player_id }
-            
-            self.next_player()
-            self.next_player()
-            return {"status": "Success"}                     
+            return {"status": "Success"}                 
 
         if (selected_card.face == top_card.face or selected_card.suit == top_card.suit ):
             self.pile.append(selected_card)
@@ -249,6 +265,7 @@ class Engine:
                         
             self.next_player()
             return {"status": "Success"}
+        
         else:
             return {"status": "Failed"}
 
@@ -260,14 +277,19 @@ class Engine:
             self.pile = self.pile[-1:]
             self.gen.receive_cards(new_cards)
 
-        recieved_card = self.gen.deal_card(1)
-        self.current_player.recieve(recieved_card)
-        self.next_player()
+        if self.pick_mode:
+            recieved_cards = self.gen.deal_card(self.num_of_picks)
+            self.current_player.recieve(recieved_cards)
+            self.pick_mode = False
+            self.num_of_picks = 2
+            self.next_player()
+
+        else:
+            recieved_card = self.gen.deal_card(1)
+            self.current_player.recieve(recieved_card)
+            self.next_player()
 
     def request(self, suit):
-
-        self.request_mode = True
-
         if suit == "whot":
             pass
         else:
@@ -348,7 +370,8 @@ class Engine:
             json.dump(data, f, indent=4)  # Pretty-print JSON for readability
 
         return True
-    
+
+
 
 class TestEngine(Engine):
 

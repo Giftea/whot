@@ -9,22 +9,6 @@ import secrets
 
 JOIN = {}
 
-def serialize_game_state(game_state: dict, player_id: str):
-    state = game_state.copy()
-
-    state['pile_top'] = str(state['pile_top'])
-
-    current_player = player_id
-    keys: list[str] = state.keys()
-
-    for key in keys:
-        if key.startswith("player_"):
-            if key == current_player:
-                state[key] = [str(card) for card in state[key]]
-            else:
-                state[key] = len(state[key])
-
-    return state
 
 class GameConnection:
     """
