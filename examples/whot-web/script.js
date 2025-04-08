@@ -195,7 +195,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const player_id = document.getElementById("player_id");
     const i_need = document.getElementById("i_need");
     
-    const websocket = new WebSocket("ws://192.168.211.171:8765/");
+    const websocket = new WebSocket("ws://127.0.0.1:8765/");
 
     initGame(websocket);
     receiveMoves(websocket, player_id);
