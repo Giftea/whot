@@ -1,24 +1,12 @@
 from .deck import Deck, Card, Suit
 from .player import Player
+from .utils import serialize_game_state
 import json
 import uuid
 import os
 
 
-def serialize_game_state(game_state: dict):
-    state = game_state.copy()
-
-    state['pile_top'] = str(state['pile_top'])
-    keys: list[str] = state.keys()
-
-    for key in keys:
-        if key.startswith("player_"):
-                state[key] = [str(card) for card in state[key]]
-
-    return state
-
 class Engine:
-    # Whot Engine
 
     def __init__(self, number_of_players: int = 2, number_of_cards: int = 4):
         """
@@ -61,11 +49,11 @@ class Engine:
         view = {}
 
         view["current_player"] = self.current_player.player_id
-        view["pile_top"] = str(self.pile[-1])
+        view["pile_top"] = self.pile[-1]
 
         for p in self.players:
             if (p.player_id == player_id):
-                view[p.player_id] = [ str(card) for card in p._cards ]
+                view[p.player_id] = p._cards
             else:
                 view[p.player_id] = len(p._cards)
 
@@ -116,6 +104,7 @@ class Engine:
         selected_card: Card = self.current_state[self.current_player.player_id][card_index]
         top_card = self.pile[-1]
 
+        # request card logic
         if (selected_card.suit == Suit.WHOT and self.pick_mode == False):
             self.pile.append(selected_card)
             self.current_player._cards.remove(selected_card)
@@ -139,7 +128,7 @@ class Engine:
                 self.request_mode = False
                 return {"status": "Success"}
 
-            # Go to market logic
+            # Go to market logic in request mode
             if selected_card.suit == self.requested_suit and selected_card.face == 14:
                 self.pile.append(selected_card)
                 self.current_player._cards.remove(selected_card)
@@ -155,7 +144,7 @@ class Engine:
 
                 return {"status": "Success"}
 
-            # Suspension logic
+            # Suspension logic in request mode
             if selected_card.suit == self.requested_suit and selected_card.face == 8:
                 self.pile.append(selected_card)
                 self.current_player._cards.remove(selected_card)
@@ -168,6 +157,7 @@ class Engine:
                 self.request_mode = False
                 return {"status": "Success"}
             
+            # pick two logic in request mode
             if selected_card.suit == self.requested_suit and selected_card.face == 2:
                 self.pile.append(selected_card)
                 self.current_player._cards.remove(selected_card)
@@ -211,6 +201,7 @@ class Engine:
 
                 return {"status": "Success"}
 
+        # Pick two logic
         if (selected_card.face == 2 and selected_card.suit == top_card.suit) or (selected_card.face == 2 and top_card.face == 2):
             self.pile.append(selected_card)
             self.current_player._cards.remove(selected_card)
@@ -256,6 +247,7 @@ class Engine:
             self.next_player()
             return {"status": "Success"}                 
 
+        # normal logic
         if (selected_card.face == top_card.face or selected_card.suit == top_card.suit ):
             self.pile.append(selected_card)
             self.current_player._cards.remove(selected_card)
