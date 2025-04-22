@@ -51,19 +51,12 @@ In the Nigerian version, extra special cards were introduced. These special card
 
 To use this you need `Python 3.11` or higher. Other lower versions of Python might work but I haven't tested them.
 
-First, install the dependencies with this command:
 
 ```bash
-pip install -r requirements.txt
+pip install whot
 ```
 
-Then run the server:
-
-```bash
-python3 main.py
-```
-
-The application will run on all available addresses on the system.
+Go through the [documentation](https://eteimz.github.io/whot/) to learn more.
 
 ## Contributions
 
