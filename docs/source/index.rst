@@ -11,7 +11,7 @@ Using this engine, you can build your own Whot! game servers and connect it to a
 Installation
 ------------
 
-The Engine is implemented in python, so to install it, you can use pip:
+The Engine is implemented in python, so to install it, you can use `pip <https://pypi.org/project/pip>`_:
 
 .. code-block:: console
 
