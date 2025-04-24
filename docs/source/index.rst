@@ -1,8 +1,8 @@
 WHOT
 ====
 
-**Whot** is an Engine that implements the game of `whot! <https://en.wikipedia.org/wiki/Whot!>`_.
-Using this engine you can build your own whot! game servers and connect it to any frontend technology of your choice.
+**Whot** is an Engine that implements the game of `Whot! <https://en.wikipedia.org/wiki/Whot!>`_.
+Using this engine you can build your own Whot! game servers and connect it to any frontend technology of your choice.
 
 .. note::
 
@@ -22,7 +22,7 @@ Once installed, you can start using the engine in your Python projects.
 Usage
 -----
 
-The engine provides simple set of APIs that coressponds to the actual whot! game.
+The engine provides simple set of APIs that coressponds to the actual Whot! game.
 
 To start the game import the ``Whot`` class
 
