@@ -22,7 +22,7 @@ Once installed, you can start using the engine in your Python projects.
 Usage
 -----
 
-The engine provides simple set of APIs that coressponds to the actual Whot! game.
+The engine provides simple set of APIs that corresponds to the actual Whot! game.
 
 To start the game, import the ``Whot`` class
 
@@ -54,13 +54,13 @@ The ``game_state`` method returns a dictionary that contains the current state o
     'player_2': [7 CIRCLE, 3 SQUARE, 11 CROSS, 8 STAR]
    }
 
-To view the state of the game use from a player's perspestive, use the `view` method:
+To view the state of the game use from a player's perspective, use the `view` method:
 
 .. code-block:: python
 
    game.view('player_2')
 
-The code above views the game state from the perspestive of ``player_2``:
+The code above views the game state from the perspective of ``player_2``:
 
 .. code-block:: python
 
